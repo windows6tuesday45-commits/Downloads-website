@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download Center</title>
+  <link rel="icon" href="logo.png">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0d1b2a;
+      color: white;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      background-color: #1b263b;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    header img {
+      height: 50px;
+      border-radius: 10px;
+      border: 2px solid #415a77;
+      box-shadow: 0 0 10px rgba(65,90,119,0.8);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      color: #00d4ff;
+    }
+
+    .files-container, .download-center {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      background-color: #1b263b;
+    }
+
+    .files-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .file-card {
+      background-color: #1e3a5f;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .file-card h3 {
+      margin-top: 0;
+    }
+
+    .download-btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+
+    .green { background-color: #00c853; }
+    .yellow { background-color: #ffb300; color:black; }
+    .red { background-color: #e53935; }
+
+    .download-btn:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+
+    .pagination {
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .pagination button.active {
+      background-color: #0056b3;
+    }
+
+    .download-center {
+      display: none;
+      text-align: center;
+    }
+
+    .download-box {
+      background-color: #2a3c59;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    select, button {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button#startDownload {
+      background-color: #00c853;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button#startDownload:hover {
+      background-color: #00e676;
+    }
+
+    #no-internet {
+      color: #ff5252;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    .back-btn {
+      margin-top: 20px;
+      padding: 8px 15px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .back-btn:hover { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Logo">
+  <h1>Download Center</h1>
+</header>
+
+<!-- Main Downloads Page -->
+<div class="files-container" id="downloads-page"></div>
+
+<div class="pagination" id="pagination"></div>
+
+<!-- Download Center Section -->
+<div class="download-center" id="download-center">
+  <div class="download-box" id="download-box">
+    <p id="no-internet" style="display:none;">No internet connection. Cannot load download center.</p>
+    <p id="download-file-name"></p>
+
+    <label for="lang">Choose language:</label>
+    <select id="lang">
+      <option>English</option>
+      <option>Español</option>
+      <option>Français</option>
+      <option>Deutsch</option>
+    </select><br>
+
+    <label for="size">Choose file size:</label>
+    <select id="size">
+      <option>Small (10 MB)</option>
+      <option>Medium (50 MB)</option>
+      <option>Large (200 MB)</option>
+    </select><br>
+
+    <button id="startDownload" onclick="startDownload()">Download</button>
+    <br>
+    <button class="back-btn" onclick="goBack()">Back to Downloads</button>
+  </div>
+</div>
+
+<script>
+  // Generate 100 example files
+  const randomNames = [
+    "windows.exe","notes.txt","just_notes.txt","android.iso","photo_viewer.exe",
+    "media_center.exe","archive_manager.exe","file_explorer.exe","startup_config.txt",
+    "bootlog.txt","system_tools.exe","notepad2.exe","control_center.exe",
+    "device_manager.exe","report.txt","version_info.txt","installer.exe",
+    "driver_update.exe","tools_setup.exe","update_patch.exe"
+  ];
+
+  const files = [];
+  for(let i=0;i<100;i++){
+    const color = (i%3===0)?'red':(i%2===0?'yellow':'green');
+    files.push({name: randomNames[i%randomNames.length], color: color});
+  }
+
+  const filesPerPage = 10;
+  let currentPage = 1;
+  let currentFile = '';
+
+  function renderFiles(page){
+    const container = document.getElementById('downloads-page');
+    container.innerHTML = '';
+    const start = (page-1)*filesPerPage;
+    const end = start+filesPerPage;
+    const currentFiles = files.slice(start,end);
+
+    currentFiles.forEach(file=>{
+      const div = document.createElement('div');
+      div.className='file-card';
+      div.innerHTML=`<h3>${file.name}</h3>
+        <button class="download-btn ${file.color}" ${file.color==='red'?'disabled':''} onclick="openDownloadCenter('${file.name}')">
+          ${file.color==='red'?'Blocked':'Download'}
+        </button>`;
+      container.appendChild(div);
+    });
+
+    renderPagination();
+  }
+
+  function renderPagination(){
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML='';
+    const totalPages = Math.ceil(files.length/filesPerPage);
+    for(let i=1;i<=totalPages;i++){
+      const btn=document.createElement('button');
+      btn.innerText=i;
+      if(i===currentPage) btn.classList.add('active');
+      btn.onclick=()=>{
+        currentPage=i;
+        renderFiles(currentPage);
+      };
+      pagination.appendChild(btn);
+    }
+  }
+
+  function openDownloadCenter(fileName){
+    currentFile=fileName;
+    if(!navigator.onLine){
+      document.getElementById('no-internet').style.display='block';
+      document.getElementById('startDownload').style.display='none';
+    } else {
+      document.getElementById('no-internet').style.display='none';
+      document.getElementById('startDownload').style.display='inline-block';
+    }
+
+    document.getElementById('downloads-page').style.display='grid';
+    document.getElementById('downloads-page').style.display='none';
+    document.getElementById('pagination').style.display='none';
+    document.getElementById('download-center').style.display='block';
+    document.getElementById('download-file-name').innerText=`You are about to download: ${fileName}`;
+  }
+
+  function startDownload(){
+    const lang = document.getElementById('lang').value;
+    const size = document.getElementById('size').value;
+    alert(`Downloading ${currentFile} (${size}, ${lang})...`);
+    window.location.href='https://example.com/downloads/'+encodeURIComponent(currentFile);
+  }
+
+  function goBack(){
+    document.getElementById('download-center').style.display='none';
+    document.getElementById('downloads-page').style.display='grid';
+    document.getElementById('pagination').style.display='block';
+  }
+
+  renderFiles(currentPage);
+</script>
+</body>
+</html>
